@@ -1,0 +1,672 @@
+{
+  "info": {
+    "name": "Feni Blood Line API",
+    "description": "Complete API collection for Feni Blood Line — blood donor discovery and emergency blood request platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "firebase_token",
+      "value": "PASTE_YOUR_FIREBASE_ID_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "request_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the API is running."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Feni Blood Line API is running\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Sync User (First Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data._id) {",
+                  "  pm.collectionVariables.set('user_id', res.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/sync",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "sync"]
+            },
+            "description": "Called immediately after Google Sign-In. Verifies the Firebase token, creates the user if new, or returns existing user. No request body needed — user info is extracted from the token."
+          },
+          "response": [
+            {
+              "name": "200 OK — User synced",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"User synced successfully\",\n  \"data\": {\n    \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n    \"firebaseUid\": \"firebase_uid_here\",\n    \"fullName\": \"Ruhul Amin\",\n    \"email\": \"ruhul@example.com\",\n    \"profileImageUrl\": \"https://lh3.googleusercontent.com/...\",\n    \"isAvailableToDonate\": false,\n    \"isProfileComplete\": false,\n    \"isBlocked\": false,\n    \"donationCount\": 0,\n    \"createdAt\": \"2024-06-04T12:00:00.000Z\",\n    \"updatedAt\": \"2024-06-04T12:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid or expired Firebase token\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Returns the authenticated user's full profile."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Profile retrieved\",\n  \"data\": {\n    \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n    \"firebaseUid\": \"firebase_uid_here\",\n    \"fullName\": \"Ruhul Amin\",\n    \"email\": \"ruhul@example.com\",\n    \"phoneNumber\": \"01712345678\",\n    \"bloodGroup\": \"B+\",\n    \"location\": \"Feni Sadar\",\n    \"profileImageUrl\": \"https://lh3.googleusercontent.com/...\",\n    \"isAvailableToDonate\": true,\n    \"isProfileComplete\": true,\n    \"isBlocked\": false,\n    \"donationCount\": 0,\n    \"createdAt\": \"2024-06-04T12:00:00.000Z\",\n    \"updatedAt\": \"2024-06-04T12:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Complete Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ruhul Amin\",\n  \"phoneNumber\": \"01712345678\",\n  \"bloodGroup\": \"B+\",\n  \"location\": \"Feni Sadar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me", "profile"]
+            },
+            "description": "Complete the user profile. Required before enabling donor availability. All 4 fields are required.\n\n**bloodGroup** options: A+, A-, B+, B-, AB+, AB-, O+, O-\n**location** options: Feni Sadar, Sonagazi, Fulgazi, Chhagalnaiya, Daganbhuiyan, Parshuram\n**phoneNumber**: Bangladeshi format (01XXXXXXXXX or +8801XXXXXXXXX)"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Profile completed successfully\",\n  \"data\": {\n    \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n    \"fullName\": \"Ruhul Amin\",\n    \"email\": \"ruhul@example.com\",\n    \"phoneNumber\": \"01712345678\",\n    \"bloodGroup\": \"B+\",\n    \"location\": \"Feni Sadar\",\n    \"isAvailableToDonate\": false,\n    \"isProfileComplete\": true,\n    \"isBlocked\": false,\n    \"donationCount\": 0\n  }\n}"
+            },
+            {
+              "name": "400 Validation Error",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"bloodGroup: Invalid blood group\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ruhul Amin\",\n  \"phoneNumber\": \"01712345678\",\n  \"bloodGroup\": \"B+\",\n  \"location\": \"Feni Sadar\",\n  \"homeAddress\": \"123 Main Road, Feni Sadar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me", "profile"]
+            },
+            "description": "Update an already-completed profile. All fields are optional — send only the ones you want to change. At least one field must be provided. Profile must be complete before calling this endpoint.\n\n**bloodGroup** options: A+, A-, B+, B-, AB+, AB-, O+, O-\n**location** options: Feni Sadar, Sonagazi, Fulgazi, Chhagalnaiya, Daganbhuiyan, Parshuram\n**phoneNumber**: Bangladeshi format (01XXXXXXXXX or +8801XXXXXXXXX)"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Profile updated successfully\",\n  \"data\": {\n    \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n    \"fullName\": \"Ruhul Amin\",\n    \"email\": \"ruhul@example.com\",\n    \"phoneNumber\": \"01712345678\",\n    \"bloodGroup\": \"B+\",\n    \"location\": \"Feni Sadar\",\n    \"homeAddress\": \"123 Main Road, Feni Sadar\",\n    \"isAvailableToDonate\": true,\n    \"isProfileComplete\": true,\n    \"isBlocked\": false\n  }\n}"
+            },
+            {
+              "name": "400 No Fields Provided",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"At least one field must be provided\",\n  \"data\": null\n}"
+            },
+            {
+              "name": "400 Profile Not Complete",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Complete your profile first\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Donor Availability — Enable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailableToDonate\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me/availability",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me", "availability"]
+            },
+            "description": "Enable donor availability. Profile must be complete first, and user must not be blocked."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"You are now marked as available for donation\",\n  \"data\": { \"isAvailableToDonate\": true }\n}"
+            },
+            {
+              "name": "400 Profile Incomplete",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"You must complete your profile before enabling donor availability\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Donor Availability — Disable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isAvailableToDonate\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me/availability",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me", "availability"]
+            },
+            "description": "Mark yourself as unavailable for donation."
+          }
+        },
+        {
+          "name": "Search Donors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/search?bloodGroup=B+&location=Feni Sadar&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "search"],
+              "query": [
+                {
+                  "key": "bloodGroup",
+                  "value": "B+",
+                  "description": "Optional. One of: A+, A-, B+, B-, AB+, AB-, O+, O-"
+                },
+                {
+                  "key": "location",
+                  "value": "Feni Sadar",
+                  "description": "Optional. One of: Feni Sadar, Sonagazi, Fulgazi, Chhagalnaiya, Daganbhuiyan, Parshuram"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Default: 1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Optional. Default: 10. Max: 100"
+                }
+              ]
+            },
+            "description": "Public endpoint. Returns paginated list of available donors. All filters are optional — omit any to search across all values. Only returns donors who are available, have a complete profile, and are not blocked."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Donors retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"name\": \"Ruhul Amin\",\n      \"initials\": \"RA\",\n      \"bloodGroup\": \"B+\",\n      \"location\": \"Feni Sadar\",\n      \"area\": \"123 Main Road, Feni Sadar\",\n      \"phone\": \"01712345678\",\n      \"email\": \"ruhul@example.com\",\n      \"homeAddress\": \"123 Main Road, Feni Sadar\",\n      \"profileImageUrl\": \"https://lh3.googleusercontent.com/...\",\n      \"available\": true,\n      \"verified\": true\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 10,\n    \"total\": 1,\n    \"totalPages\": 1\n  }\n}"
+            },
+            {
+              "name": "400 Invalid Blood Group",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"bloodGroup: Invalid blood group\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blood Requests",
+      "item": [
+        {
+          "name": "Submit Emergency Blood Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data._id) {",
+                  "  pm.collectionVariables.set('request_id', res.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientName\": \"Rafi H.\",\n  \"hospitalName\": \"Feni General Hospital\",\n  \"bloodGroup\": \"O+\",\n  \"urgency\": \"URGENT\",\n  \"address\": \"Feni Sadar, Feni District, Chittagong Division\",\n  \"contactNumber\": \"01812345678\",\n  \"unitsNeeded\": 2,\n  \"location\": \"Feni Sadar\",\n  \"notes\": \"Urgent need for surgery patient. Please contact immediately.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/blood-requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "blood-requests"]
+            },
+            "description": "Public endpoint. Hospitals or individuals submit an emergency blood request. Auto-sets status to OPEN.\n\n**urgency** options: URGENT, HIGH, NEEDED\n**bloodGroup** options: A+, A-, B+, B-, AB+, AB-, O+, O-\n**location** options: Feni Sadar, Sonagazi, Fulgazi, Chhagalnaiya, Daganbhuiyan, Parshuram\n**unitsNeeded**: 1–20\n**notes**: Optional, max 500 chars\n\nTest script auto-saves returned `_id` to `{{request_id}}` collection variable."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Emergency blood request submitted successfully\",\n  \"data\": {\n    \"_id\": \"665f2c3d4e5f6a7b8c9d0e1f\",\n    \"patientName\": \"Rafi H.\",\n    \"hospitalName\": \"Feni General Hospital\",\n    \"bloodGroup\": \"O+\",\n    \"urgency\": \"URGENT\",\n    \"address\": \"Feni Sadar, Feni District\",\n    \"contactNumber\": \"01812345678\",\n    \"unitsNeeded\": 2,\n    \"location\": \"Feni Sadar\",\n    \"status\": \"OPEN\",\n    \"notes\": \"Urgent need for surgery patient.\",\n    \"createdAt\": \"2024-06-04T14:00:00.000Z\",\n    \"updatedAt\": \"2024-06-04T14:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Validation Error",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"contactNumber: Must be a valid Bangladeshi phone number\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Blood Requests (OPEN)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/blood-requests?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "blood-requests"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Default: 1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Optional. Default: 10. Max: 100"
+                },
+                {
+                  "key": "hospitalName",
+                  "value": "Feni General",
+                  "description": "Optional. Partial, case-insensitive search on hospital name",
+                  "disabled": true
+                },
+                {
+                  "key": "bloodGroup",
+                  "value": "O+",
+                  "description": "Optional filter",
+                  "disabled": true
+                },
+                {
+                  "key": "location",
+                  "value": "Feni Sadar",
+                  "description": "Optional filter",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "description": "Optional. Default: OPEN. One of: OPEN, FULFILLED, CANCELLED",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Public endpoint. Returns paginated blood requests. Defaults to OPEN status. Can be filtered by hospitalName (partial match), bloodGroup, location, and status."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blood requests retrieved successfully\",\n  \"data\": [\n    {\n      \"_id\": \"665f2c3d4e5f6a7b8c9d0e1f\",\n      \"hospitalName\": \"Feni General Hospital\",\n      \"bloodGroup\": \"O+\",\n      \"address\": \"Feni Sadar, Feni District\",\n      \"contactNumber\": \"01812345678\",\n      \"unitsNeeded\": 2,\n      \"location\": \"Feni Sadar\",\n      \"status\": \"OPEN\",\n      \"notes\": \"Urgent need for surgery patient.\",\n      \"createdAt\": \"2024-06-04T14:00:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 10,\n    \"total\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Blood Requests — Filter by Group + Location + Hospital",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/blood-requests?bloodGroup=O+&location=Feni Sadar&status=OPEN&hospitalName=Feni General",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "blood-requests"],
+              "query": [
+                {
+                  "key": "bloodGroup",
+                  "value": "O+"
+                },
+                {
+                  "key": "location",
+                  "value": "Feni Sadar"
+                },
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                },
+                {
+                  "key": "hospitalName",
+                  "value": "Feni General",
+                  "description": "Partial, case-insensitive match"
+                }
+              ]
+            },
+            "description": "List requests filtered by blood group, location, and hospital name (partial, case-insensitive match)."
+          }
+        },
+        {
+          "name": "Get Blood Request by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/blood-requests/{{request_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "blood-requests", "{{request_id}}"]
+            },
+            "description": "Public endpoint. Fetch a single blood request by its MongoDB ObjectId. Uses `{{request_id}}` variable set automatically when creating a request."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blood request retrieved successfully\",\n  \"data\": {\n    \"_id\": \"665f2c3d4e5f6a7b8c9d0e1f\",\n    \"hospitalName\": \"Feni General Hospital\",\n    \"bloodGroup\": \"O+\",\n    \"status\": \"OPEN\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Blood request not found\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Request Status — Fulfilled",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FULFILLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/blood-requests/{{request_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "blood-requests", "{{request_id}}", "status"]
+            },
+            "description": "Update the status of a blood request. Valid values: OPEN, FULFILLED, CANCELLED."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Blood request status updated\",\n  \"data\": {\n    \"_id\": \"665f2c3d4e5f6a7b8c9d0e1f\",\n    \"status\": \"FULFILLED\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Request Status — Cancelled",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/blood-requests/{{request_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "blood-requests", "{{request_id}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "404 — Unknown Route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/does-not-exist",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "does-not-exist"]
+            },
+            "description": "Triggers the global notFound middleware."
+          },
+          "response": [
+            {
+              "name": "404",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"The requested resource was not found\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "401 — Missing Auth Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Calls a protected endpoint without Authorization header."
+          },
+          "response": [
+            {
+              "name": "401",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Missing or malformed Authorization header\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "400 — Invalid Blood Group",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/search?bloodGroup=XY&location=Feni Sadar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "search"],
+              "query": [
+                { "key": "bloodGroup", "value": "XY" },
+                { "key": "location", "value": "Feni Sadar" }
+              ]
+            },
+            "description": "Triggers Zod validation rejection on query param."
+          },
+          "response": [
+            {
+              "name": "400",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"bloodGroup: Invalid blood group\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
