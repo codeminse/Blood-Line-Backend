@@ -1,0 +1,9 @@
+services:
+  api:
+    image: ghcr.io/codeminse/blood-line-backend:latest
+    container_name: feni-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - /opt/feni/backend/.env:/app/.env:ro
