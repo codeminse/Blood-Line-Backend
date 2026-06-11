@@ -63,16 +63,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Copy deploy files to VPS
-        uses: appleboy/scp-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "deploy/*"
-          target: /opt/feni/backend
-          overwrite: true
-
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1
         env:
@@ -80,13 +70,24 @@ jobs:
           NGINX_CHANGED: ${{ steps.changes.outputs.nginx }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: APP_CHANGED,NGINX_CHANGED,GHCR_TOKEN,GHCR_USER
+          timeout: 90s
+          command_timeout: 15m
+          envs: APP_CHANGED,NGINX_CHANGED,GHCR_TOKEN,GHCR_USER,REPO,SHA
           script: |
             set -e
+            # Fetch deploy files over the GitHub API (avoids a separate flaky scp connection)
+            mkdir -p /opt/feni/backend/deploy/nginx
+            API="https://api.github.com/repos/$REPO/contents"
+            HDR="Authorization: token $GHCR_TOKEN"
+            ACC="Accept: application/vnd.github.raw"
+            curl -fsSL -H "$HDR" -H "$ACC" "$API/deploy/docker-compose.yml?ref=$SHA" -o /opt/feni/backend/deploy/docker-compose.yml
+            curl -fsSL -H "$HDR" -H "$ACC" "$API/deploy/nginx/api.fenibloodline.com.conf?ref=$SHA" -o /opt/feni/backend/deploy/nginx/api.fenibloodline.com.conf
             if [ "$NGINX_CHANGED" = "true" ]; then
               if [ -f /etc/letsencrypt/live/api.fenibloodline.com/fullchain.pem ]; then
                 echo ">> Updating nginx config"
