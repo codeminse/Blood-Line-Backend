@@ -75,6 +75,7 @@ jobs:
           GHCR_USER: ${{ github.actor }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
+          MONGODB_URI_NEW: ${{ secrets.MONGODB_URI_NEW }}
         with:
           timeout_minutes: 20
           max_attempts: 5
@@ -90,7 +91,7 @@ jobs:
                   -o StrictHostKeyChecking=accept-new \
                   -o ConnectTimeout=20 \
                   "$VPS_USER@$VPS_HOST" \
-                  "APP_CHANGED='$APP_CHANGED' NGINX_CHANGED='$NGINX_CHANGED' GHCR_TOKEN='$GHCR_TOKEN' GHCR_USER='$GHCR_USER' REPO='$REPO' SHA='$SHA' bash -s" \
+                  "APP_CHANGED='$APP_CHANGED' NGINX_CHANGED='$NGINX_CHANGED' GHCR_TOKEN='$GHCR_TOKEN' GHCR_USER='$GHCR_USER' REPO='$REPO' SHA='$SHA' MONGODB_URI_NEW='$MONGODB_URI_NEW' bash -s" \
                   < deploy/remote-deploy.sh; then
                 echo "Deployed via port $PORT"
                 exit 0

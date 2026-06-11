@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 # Runs ON the VPS via ssh stdin from the GitHub Actions workflow.
 # Expects env: APP_CHANGED, NGINX_CHANGED, GHCR_TOKEN, GHCR_USER, REPO, SHA
+# Optional: MONGODB_URI_NEW (syncs MONGODB_URI in /opt/feni/backend/.env)
 set -e
+
+ENV_UPDATED=false
+if [ -n "$MONGODB_URI_NEW" ] && [ -f /opt/feni/backend/.env ]; then
+  if ! grep -qF "MONGODB_URI=$MONGODB_URI_NEW" /opt/feni/backend/.env; then
+    sed -i "s|^MONGODB_URI=.*|MONGODB_URI=$MONGODB_URI_NEW|" /opt/feni/backend/.env
+    ENV_UPDATED=true
+    echo ">> MONGODB_URI updated in .env"
+  fi
+fi
 
 mkdir -p /opt/feni/backend/deploy/nginx
 API="https://api.github.com/repos/$REPO/contents"
@@ -32,5 +42,10 @@ if [ "$APP_CHANGED" = "true" ]; then
   docker image prune -f
 else
   echo ">> No app changes, skipping"
+fi
+
+if [ "$ENV_UPDATED" = "true" ]; then
+  echo ">> Restarting feni-api to pick up new env"
+  docker restart feni-api
 fi
 echo ">> Deploy finished OK"
